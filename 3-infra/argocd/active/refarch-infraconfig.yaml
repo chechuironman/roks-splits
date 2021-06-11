@@ -14,6 +14,12 @@ spec:
     namespace: openshift-ingress-operator
     jsonPointers:
     - /spec/defaultCertificate
+  - group: apps
+    kind: IngressController
+    name: default
+    namespace: openshift-ingress-operator
+    jsonPointers:
+    - /spec/replicas
   destination:
     namespace: tools
     server: https://kubernetes.default.svc
