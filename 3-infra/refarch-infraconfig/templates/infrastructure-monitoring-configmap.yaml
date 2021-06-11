@@ -10,10 +10,10 @@ data:
   config.yaml: |+
     alertmanagerMain:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra
@@ -24,10 +24,10 @@ data:
         effect: NoExecute
     prometheusK8s:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra
@@ -38,10 +38,10 @@ data:
         effect: NoExecute
     prometheusOperator:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra
@@ -52,10 +52,10 @@ data:
         effect: NoExecute
     grafana:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra
@@ -66,10 +66,10 @@ data:
         effect: NoExecute
     k8sPrometheusAdapter:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra
@@ -80,10 +80,10 @@ data:
         effect: NoExecute
     kubeStateMetrics:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra
@@ -94,10 +94,10 @@ data:
         effect: NoExecute
     telemeterClient:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra
@@ -108,10 +108,10 @@ data:
         effect: NoExecute
     openshiftStateMetrics:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra
@@ -122,10 +122,10 @@ data:
         effect: NoExecute
     thanosQuerier:
       nodeSelector:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
       tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
       - key: infra

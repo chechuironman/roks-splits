@@ -12,10 +12,10 @@ spec:
   nodePlacement:
     nodeSelector:
       matchLabels:
-        node-role.kubernetes.io/infra: "true"
+        node-role.kubernetes.io/foundational-services: "true"
     tolerations:
       - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
+        key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
   defaultCertificate:
