@@ -7,6 +7,13 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
+  ignoreDifferences:
+  - group: apps
+    kind: IngressController
+    name: default
+    namespace: openshift-ingress-operator
+    jsonPointers:
+    - /spec/defaultCertificate
   destination:
     namespace: tools
     server: https://kubernetes.default.svc

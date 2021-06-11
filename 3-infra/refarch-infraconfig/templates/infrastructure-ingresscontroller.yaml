@@ -17,6 +17,4 @@ spec:
         key: node-role.kubernetes.io/foundational-services
         value: 'true'
         operator: Equal
-  defaultCertificate:
-    name: {{ $.Values.ingress.defaultCertificate }}
   replicas: 2
