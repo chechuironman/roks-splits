@@ -10,13 +10,15 @@ metadata:
 spec:
   nodePlacement:
     nodeSelector:
-    node-role.kubernetes.io/foundational-services: "true"
-  tolerations:
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/foundational-services
-      value: 'true'
-      operator: Equal
+      matchLabels:
+        node-role.kubernetes.io/foundational-services: "true"
+    tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/foundational-services
+        value: 'true'
+        operator: Equal
   endpointPublishingStrategy:
     loadBalancer:
       scope: Internal
     type: LoadBalancerService
+  replicas: 3
