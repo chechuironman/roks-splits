@@ -31,6 +31,16 @@ spec:
     server: https://kubernetes.default.svc
   - namespace: openshift-marketplace
     server: https://kubernetes.default.svc
+  - namespace: openshift-operators
+    server: https://kubernetes.default.svc
+  - namespace: openshift-gitops
+    server: https://kubernetes.default.svc
+  - namespace: openshift-pipelines
+    server: https://kubernetes.default.svc
+  - namespace: openshift-console
+    server: https://kubernetes.default.svc
+  - namespace: openshift-conosle-operators
+    server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: ""
     kind: Namespace
