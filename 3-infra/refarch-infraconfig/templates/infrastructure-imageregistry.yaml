@@ -16,7 +16,7 @@ spec:
       operator: Equal
   defaultRoute: true
   logLevel: Normal
-  managementState: Managed
+  managementState: Removed
   observedConfig: null
   operatorLogLevel: Normal
   proxy: {}
