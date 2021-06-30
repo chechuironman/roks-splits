@@ -9,6 +9,7 @@ metadata:
 spec:
   nodeSelector:
     node-role.kubernetes.io/foundational-services: "true"
+    node-role.kubernetes.io/master: ""
   tolerations:
     - effect: NoSchedule
       key: node-role.kubernetes.io/foundational-services
