@@ -21,7 +21,7 @@ spec:
   observedConfig: null
   operatorLogLevel: Normal
   proxy: {}
-  replicas: 1
+  replicas: 0
   requests:
     read:
       maxWaitInQueue: 0s
