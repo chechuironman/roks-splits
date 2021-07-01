@@ -39,7 +39,7 @@ spec:
     server: https://kubernetes.default.svc
   - namespace: openshift-console
     server: https://kubernetes.default.svc
-  - namespace: openshift-console-operators
+  - namespace: openshift-console-operator
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: ""
