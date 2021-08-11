@@ -24,8 +24,8 @@ resources:
 #- argocd/instances/shared-secrets.yaml
 
 # IBM Software - Cloud Pak for Data
-- argocd/operators/cp4data-operators.yaml
-- argocd/instances/cp4data-instance.yaml
+# - argocd/operators/cp4data-operators.yaml
+# - argocd/instances/cp4data-instance.yaml
 
 # IBM Foundations / Common Services
 - argocd/operators/ibm-foundations.yaml
