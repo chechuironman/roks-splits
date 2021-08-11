@@ -5,7 +5,7 @@ metadata:
   name: applications
 spec:
   sourceRepos:
-  - https://github.ibm.com/jesus-arteche/roks-cp4data
+  - https://github.ibm.com/jesus-arteche/roks-split-1
   # - https://github.com/cloud-native-toolkit-demos/multi-tenancy-gitops-apps.git
   destinations:
   - namespace: ci
@@ -37,8 +37,8 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: 0-bootstrap/argocd/single-cluster/3-apps
-    repoURL: https://github.ibm.com/jesus-arteche/roks-cp4data
+    path: 0-bootstrap/argocd/roks-split-1/3-apps
+    repoURL: https://github.ibm.com/jesus-arteche/roks-split-1
     targetRevision: kustomize
   syncPolicy:
     automated:

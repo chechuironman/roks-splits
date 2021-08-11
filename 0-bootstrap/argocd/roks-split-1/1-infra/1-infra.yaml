@@ -2,26 +2,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: services
+  name: infra
 spec:
   sourceRepos:
-  - https://github.ibm.com/jesus-arteche/roks-split-1.git
-  # - https://github.com/cloud-native-toolkit-demos/multi-tenancy-gitops-apps.git
-  # Do not change the below repository URL
-  # - https://pages.github.ibm.com/jesus-arteche/roks-services
-  - https://github.ibm.com/jesus-arteche/roks-services.git
+  - https://github.ibm.com/jesus-arteche/roks-split-1
+  - https://github.ibm.com/jesus-arteche/roks-infra
   destinations:
-  - namespace: cloudpak
+  - namespace: sealed-secrets
     server: https://kubernetes.default.svc
-  - namespace: openshift-gitops
-    server: https://kubernetes.default.svc
-  - namespace: tools
-    server: https://kubernetes.default.svc
-  - namespace: redhat-operators
-    server: https://kubernetes.default.svc
-  - namespace: openshift-operators
-    server: https://kubernetes.default.svc
-  - namespace: openshift-marketplace
+  - namespace: instana-agent
     server: https://kubernetes.default.svc
   - namespace: ci
     server: https://kubernetes.default.svc
@@ -31,46 +20,45 @@ spec:
     server: https://kubernetes.default.svc
   - namespace: prod
     server: https://kubernetes.default.svc
-  - namespace: sealed-secrets
+  - namespace: tools
     server: https://kubernetes.default.svc
   - namespace: istio-system
     server: https://kubernetes.default.svc
   - namespace: openldap
     server: https://kubernetes.default.svc
-  - namespace: instana-agent
+  - namespace: openshift-monitoring
+    server: https://kubernetes.default.svc
+  - namespace: openshift-image-registry
+    server: https://kubernetes.default.svc
+  - namespace: openshift-ingress-operator
+    server: https://kubernetes.default.svc
+  - namespace: openshift-marketplace
+    server: https://kubernetes.default.svc
+  - namespace: openshift-operators
+    server: https://kubernetes.default.svc
+  - namespace: openshift-gitops
+    server: https://kubernetes.default.svc
+  - namespace: openshift-pipelines
+    server: https://kubernetes.default.svc
+  - namespace: openshift-console
+    server: https://kubernetes.default.svc
+  - namespace: openshift-console-operator
     server: https://kubernetes.default.svc
   - namespace: ibm-common-services
-    server: https://kubernetes.default.svc  
+    server: https://kubernetes.default.svc
   clusterResourceWhitelist:
-  # TODO: SCC needs to be moved to 1-infra, here for now for artifactory
-  - group: "security.openshift.io"
-    kind: SecurityContextConstraints
-  - group: "console.openshift.io"
-    kind: ConsoleLink
-  - group: "apps"
-    kind: statefulsets
-  - group: "apps"
-    kind: deployments
   - group: ""
-    kind: services
-  - group: ""
-    kind: configmaps
-  - group: ""
-    kind: secrets
-  - group: ""
-    kind: serviceaccounts
-  - group: "batch"
-    kind: jobs
-  - group: ""
-    kind: roles
-  - group: "route.openshift.io"
-    kind: routes
+    kind: Namespace
   - group: ""
     kind: RoleBinding
-  - group: "rbac.authorization.k8s.io"
-    kind: ClusterRoleBinding
-  - group: "rbac.authorization.k8s.io"
-    kind: ClusterRole
+  - group: "security.openshift.io"
+    kind: SecurityContextConstraints
+  - group: "imageregistry.operator.openshift.io"
+    kind: Config
+  - group: "console.openshift.io"
+    kind: ConsoleNotification
+  - group: "console.openshift.io"
+    kind: ConsoleLink
   roles:
   # A role which provides read-only access to all applications in the project
   - name: read-only
@@ -83,20 +71,19 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: services
+  name: infra
   annotations:
-    argocd.argoproj.io/sync-wave: "200"
+    argocd.argoproj.io/sync-wave: "100"
 spec:
   destination:
     namespace: openshift-gitops
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: 0-bootstrap/argocd/single-cluster/2-services
+    path: 0-bootstrap/argocd/roks-split-1/1-infra
     repoURL: https://github.ibm.com/jesus-arteche/roks-split-1
     targetRevision: master
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-
