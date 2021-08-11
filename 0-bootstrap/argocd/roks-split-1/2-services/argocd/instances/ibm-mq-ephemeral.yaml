@@ -8,7 +8,7 @@ metadata:
     gitops.tier.group: ibm-cloudpak
 spec:
   destination:
-    namespace: cloudpaks
+    namespace: cloudpak
     server: https://kubernetes.default.svc
   project: services
   source:
