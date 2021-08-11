@@ -11,7 +11,7 @@ spec:
   project: infra
   source:
     path: namespaces/cloudpak
-    repoURL: https://https://github.ibm.com/jesus-arteche/roks-infra
+    repoURL: https://github.ibm.com/jesus-arteche/roks-infra
     targetRevision: master
   syncPolicy:
     automated:
