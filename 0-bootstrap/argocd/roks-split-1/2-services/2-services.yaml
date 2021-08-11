@@ -6,10 +6,8 @@ metadata:
 spec:
   sourceRepos:
   - https://github.ibm.com/jesus-arteche/roks-split-1.git
-  # - https://github.com/cloud-native-toolkit-demos/multi-tenancy-gitops-apps.git
-  # Do not change the below repository URL
-  # - https://pages.github.ibm.com/jesus-arteche/roks-services
   - https://github.ibm.com/jesus-arteche/roks-services.git
+  - https://cloud-native-toolkit.github.io/toolkit-charts/
   destinations:
   - namespace: cloudpak
     server: https://kubernetes.default.svc
