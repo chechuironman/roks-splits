@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: storage
+  annotations:
+    argocd.argoproj.io/sync-wave: "110"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: openshift-storage
+    server: https://kubernetes.default.svc
+  project: infra
+  source:
+    path: odf-ibm
+    repoURL: https://github.ibm.com/jesus-arteche/roks-infra
+    targetRevision: master
+    helm:
+      values: |
+        ocs-operator:
+          ocs:
+            storageClass: ocs-initial
+            sizeOSD: 512Gi
+            worker_ip_1: 192.168.3.14
+            worker_ip_2: 192.168.2.10
+            worker_ip_3: 192.168.1.11
+            billingType: advanced
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

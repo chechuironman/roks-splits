@@ -1,0 +1,31 @@
+resources:
+# - argocd/consolelink.yaml
+- argocd/consolenotification.yaml
+# - argocd/namespace-cloudpak.yaml
+# - argocd/namespace-ci.yaml
+# - argocd/namespace-dev.yaml
+# - argocd/namespace-staging.yaml
+# - argocd/namespace-prod.yaml
+# - argocd/namespace-istio-system.yaml
+# - argocd/namespace-openldap.yaml
+# - argocd/namespace-sealed-secrets.yaml
+# - argocd/namespace-tools.yaml
+# - argocd/namespace-openshift-storage.yaml
+- argocd/namespace-openshift-gitops.yaml
+- argocd/namespace-openshift-console.yaml
+- argocd/namespace-openshift-console-operator.yaml
+- argocd/namespace-openshift-marketplace.yaml
+- argocd/namespace-openshift-operators.yaml
+- argocd/namespace-openshift-pipelines.yaml
+- argocd/namespace-ibm-foundations.yaml
+# - argocd/namespace-cpd-operators.yaml
+# - argocd/namespace-cpd-instance.yaml
+# - argocd/namespace-cpd-instance-tether.yaml
+# - argocd/odf-ibm.yaml
+- argocd/refarch-infraconfig.yaml
+#- argocd/refarch-machinesets.yaml
+#- argocd/storageclass-cp4a.yaml
+
+
+
+

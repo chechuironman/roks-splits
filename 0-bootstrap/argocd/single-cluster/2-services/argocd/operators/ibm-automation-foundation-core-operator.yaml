@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ibm-automation-foundation-core-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "230"
+  labels:
+    gitops.tier.group: ibm-cloudpak
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: cloudpak
+    server: 'https://kubernetes.default.svc'
+  project: services
+  source:
+    path: operators/ibm-automation-foundation-core-operator
+    repoURL: https://github.com/cloud-native-toolkit/multi-tenancy-gitops-services.git
+    targetRevision: master
+    helm:
+      values: |
+        ibm-automation-foundation-core-operator:
+          subscriptions:
+            ibmautomation:
+              name: ibm-automation-foundation-core
+              subscription:
+                channel: v1.0
+                config:
+                  resources:
+                    limits:
+                      cpu: 200m
+                      memory: 300Mi
+                    requests:
+                      cpu: 150m
+                      memory: 200Mi
+                installPlanApproval: Automatic
+                name: ibm-automation
+                source: ibm-operator-catalog
+                sourceNamespace: openshift-marketplace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
