@@ -235,6 +235,12 @@ rules:
     verbs:
       - "*"   
   - apiGroups:
+      - mq.ibm.com 
+    resources:
+      - queuemanagers
+    verbs:
+      - "*"   
+  - apiGroups:
       - operator.ibm.com
     resources:
       - namespacescopes
