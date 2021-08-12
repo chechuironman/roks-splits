@@ -1,0 +1,376 @@
+---
+title: Red Hat Openshift Kubernetes Service on IBM Cloud
+description: Production Architecture on Red Hat Openshift Kubernetes Service
+tabs: ['Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps']
+---
+
+# Red Hat Openshift Kubernetes Service on IBM Cloud 
+---
+
+Red Hat OpenShift Kubernetes Service (ROKS) is a managed service, which that implies that IBM Cloud manages the masters and are not visible to the users. The target production architecture for a production cluster in a single region is:
+
+![Target Architecture](./images/IBM_VPC_ROKS_split.jpg)
+
+The split of components showed above shows the following:
+
+- Infra nodes: they host Image Registry, Ingress controllers (custom and default), default Routers, Red Hat Marketplace. This node type does not consume licenses from the OpenShift entitlement.
+- Storage nodes: they host Openshift Container Storage components.
+- Cloud Paks nodes: they host the Cloud Paks.
+
+
+Steps:
+
+- Select an IBM Cloud region ($region)
+
+    To get the available regions for VPC run `ibmcloud is regions`
+
+    ```
+    ibmcloud target -r $region
+    ```
+
+- Create resouce group or use one already created.
+    To get the resource groups available `ibmcloud resource groups`
+    Create a group if neccessary:
+    ```
+    ibmcloud resource group-create $name
+    ``` 
+    Select the group:
+    ```
+    ibmcloud target -g $name
+    ```
+
+- Create a VPC ($vpc_name)
+
+    ```
+    ibmcloud is vpc-create $vpc_name --resource-group-name $resourcegroup --address-prefix-management manual
+    ```
+
+- Create the IP address network ranges.
+    It is needed to create one per node type and zone: infra, storage, cloudpaks and workers. For example, for infra nodes it is needed three IP address network ranges, one network range address per zone. The network ranges must be big enough to allocate IPs for all nodes of each type in each zone. $range must differ from one network range to other, it can be a created a different ones if it creates the minimum number of IPs needed for the nodes. To get available zones on the VPC region targetted run `ibmcloud is zones`, and to get the $vpc_id `ibmcloud is vpcs`:
+
+    ```
+    ibmcloud is vpc-address-prefix-create subnet-infra-1 $vpc_id $zone_1 192.168.$range_1.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-infra-2 $vpc_id $zone_3 192.168.$range_2.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-infra-3 $vpc_id $zone_3 192.168.$range_3.0/28
+    ```
+
+    Repeat the process for the rest of the node types: storage, cloud paks and workers.
+
+    ```
+    ibmcloud is vpc-address-prefix-create subnet-storage-1 $vpc_id $zone_1 192.168.$range_4.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-storage-2 $vpc_id $zone_3 192.168.$range_5.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-storage-3 $vpc_id $zone_3 192.168.$range_6.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-cloud-paks-1 $vpc_id $zone_1 192.168.$range_7.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-cloud-paks-2 $vpc_id $zone_3 192.168.$range_8.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-cloud-paks-3 $vpc_id $zone_3 192.168.$range_9.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-workers-1 $vpc_id $zone_1 192.168.$range_10.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-workers-2 $vpc_id $zone_3 192.168.$range_11.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-workers-3 $vpc_id $zone_3 192.168.$range_12.0/27
+    ```
+
+    Create an IP address network range for the subnet where the VPN Gateway will be deployed:
+
+    ```
+    ibmcloud is vpc-address-prefix-create subnet-vpn-gw $vpc_id $zone_1 192.168.$range_13.0/29
+    ```
+
+- Create the subnets.
+    It is needed to create one per node type and zone: infra, storage, cloudpaks and workers. For example, for infra nodes it is needed three subnets, one subnet per zone. It is needed to apply the IP address range to each subnet. For example, for infra nodes:
+
+    ```
+    ibmcloud is subnet-create subnet-infra-1 $vpc_id --ipv4-cidr-block 192.168.$range_1.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-infra-2 $vpc_id --ipv4-cidr-block 192.168.$range_2.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-infra-3 $vpc_id --ipv4-cidr-block 192.168.$range_3.0/28 --resource-group-name $resourcegroup
+    ```
+    Repeat the process for the rest of the node types: storage, cloud paks and workers.
+
+    ```
+    ibmcloud is subnet-create subnet-storage-1 $vpc_id --ipv4-cidr-block 192.168.$range_4.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-storage-2 $vpc_id --ipv4-cidr-block 192.168.$range_5.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-storage-3 $vpc_id --ipv4-cidr-block 192.168.$range_6.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-cloud-paks-1 $vpc_id --ipv4-cidr-block 192.168.$range_7.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-cloud-paks-2 $vpc_id --ipv4-cidr-block 192.168.$range_8.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-cloud-paks-3 $vpc_id --ipv4-cidr-block 192.168.$range_9.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-workers-1 $vpc_id --ipv4-cidr-block 192.168.$range_10.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-workers-2 $vpc_id --ipv4-cidr-block 192.168.$range_11.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-worker-3 $vpc_id --ipv4-cidr-block 192.168.$range_12.0/27 --resource-group-name $resourcegroup
+    ```
+    Create the subnet to place the VPN Gateway:
+
+    ```
+    ibmcloud is subnet-create subnet-vpn-gw $vpc_id --ipv4-cidr-block 192.168.$range_13.0/29 --resource-group-name $resourcegroup
+    ```
+
+- Create Public Gateways for outbound connectivity.
+    It is needed to create one per zone.
+
+    ```
+    ibmcloud is public-gateway-create gw-subnet-zone-1 $vpc_id $zone_1
+
+    ibmcloud is public-gateway-create gw-subnet-zone-2 $vpc_id $zone_2
+
+    ibmcloud is public-gateway-create gw-subnet-zone-3 $vpc_id $zone_3
+    ```
+    Attach the public gateways on all the subnetsthat needs outbound connectivity to Internet. Run `ibmcloud is subnets` to get the subnets ID, and `ibmcloud is public-gateways` to get the public gateway ID:
+
+    ```
+    ibmcloud is subnet-update $subnet-infra-1_id --public-gateway-id $gw-subnet-zone-1_id
+
+    ibmcloud is subnet-update $subnet-infra-2_id --public-gateway-id $gw-subnet-zone-2_id
+
+    ibmcloud is subnet-update $subnet-infra-3_id --public-gateway-id $gw-subnet-zone-3_id
+
+    ibmcloud is subnet-update $subnet-cloud-paks-1_id --public-gateway-id $gw-subnet-zone-1_id
+
+    ibmcloud is subnet-update $subnet-cloud-paks-2_id --public-gateway-id $gw-subnet-zone-2_id
+
+    ibmcloud is subnet-update $subnet-cloud-paks-3_id --public-gateway-id $gw-subnet-zone-3_id
+
+    ibmcloud is subnet-update $subnet-workers-1_id --public-gateway-id $gw-subnet-zone-1_id
+
+    ibmcloud is subnet-update $subnet-workers-2_id --public-gateway-id $gw-subnet-zone-2_id
+
+    ibmcloud is subnet-update $subnet-workers-3_id --public-gateway-id $gw-subnet-zone-3_id
+    ```
+
+
+- Create a VPN  tunnel to connect to the VPC:
+
+The documentation from IBM Cloud explains each parameter needed to establish teh IPsec tunnel that will connect our premises location with the VPC on IBM Cloud.
+https://cloud.ibm.com/docs/vpc?topic=vpc-using-vpn
+
+<InlineNotification>
+IBM Cloud offers a set of recommendation aprameters for certain set of devices here:
+https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-onprem-example
+</InlineNotification>
+
+<InlineNotification kind="warning">
+VMware is not on the list but this article describe how to get it on VMWare environments:
+"https://medium.com/ibm-garage/extending-on-premise-vmware-environment-with-an-ipsec-tunnel-to-consume-securely-ibm-cloud-13cc9326dce1"
+</InlineNotification>
+
+The next resources need to be created according to the previous recommendations or the requirements needed to establish the IPsec tunnel.
+IKE-Policy:
+The options available for this parameter can be seen running this command `ibmcloud is ike-policy-create --help`
+
+`ibmcloud is ike-policy-create $vpc_name $auth_algorithm_ike $dh_group_ike $encryption_ike $ike_version --key-lifetime $key_lifetime_ike --resource-group-name $resourcegroup`
+
+IPsec-Policy:
+The options available for this parameter can be seen running this command `ibmcloud is ipsec-policy-create --help`
+
+`ibmcloud is ipsec-policy-create $vpc_name-ipsec $auth_algorithm_ipsec $encryption_ipsec $pfs_ipsec --key-lifetime $key_lifetime_ipsec --resource-group-name $resourcegroup`
+
+Create the VPN-Gateway:
+$vpn_subnet is the subnet where the VPN gateway will be deployed. It can be a dedicated subnet or one of the infra subnets
+
+`ibmcloud is vpn-gateway-create $vpc_name $subnet-vpn-gw_ID --mode $policy --resource-group-name $resourcegroup`
+
+Create an IPsec connection:
+
+To check the parameters needed `ibmcloud is vpn-gateway-connection-create --help`. To get the id of the IKE policies run `ibmcloud is ike-policies` and to get the IPsec policies `ibmcloud is ipsec-policies`, to get the vpn gateway ID run `ibmcloud is vpn-gateways`
+
+`ibmcloud is vpn-gateway-connection-create $vpc_name $vpn_id $peer_address $pre_shared_key --ike-policy $ike_id --ipsec-policy $ipsec_id`
+
+If the policy selected was `route` based when the VPN Gateway was created, a route table is needed to be created:
+
+`ibmcloud is vpc-routing-table-create $vpc_id --vpc-zone-ingress false --name $vpc_name`
+
+Attach all the subnets to the route table, to get the ID of the route table run `ibmcloud is vpc-routing-tables`:
+
+`ibmcloud is subnet-update  $subnet-infra-1_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-infra-2_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-infra-3_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-storage-1_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-storage-2_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-storage-3_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-cloud-paks-1_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-cloud-paks-2_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-cloud-paks-3_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-workers-1_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-workers-2_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-workers-3_ID --routing-table-id $route_table_ID`
+`ibmcloud is subnet-update  $subnet-vpn-gw_ID --routing-table-id $route_table_ID`
+
+To add the routes:
+Each subnet needs a route to the remote network address range. $network_remote is the network address range of the remote network from  which ROKS will be accessed. To get the connection ID run `ibmcloud is vpn-gateway-connections $vpn-gw_ID`
+For example for infra subnets:
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-infra-1  --zone  $zone_1 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-infra-2  --zone  $zone_2 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-infra-3  --zone  $zone_3 --destination $network_remote --action deliver --next-hop $connection_id`
+#### NOT NEEDED????
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-storage-1  --zone  $zone_1 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-storage-2  --zone  $zone_2 --destination $network_remote --action deliver --next-hop $connection_id``ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-storage-3  --zone  $zone_3 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-cloud-paks-1  --zone  $zone_1 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-cloud-paks-2  --zone  $zone_2 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-cloud-paks-3  --zone  $zone_3 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-workers-1  --zone  $zone_1 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-workers-2  --zone  $zone_2 --destination $network_remote --action deliver --next-hop $connection_id`
+`ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-workers-3  --zone  $zone_3 --destination $network_remote --action deliver --next-hop $connection_id`
+
+- Create a Cloud Object Storage instance to host the images of the registry among others:
+
+`ibmcloud resource service-instance-create $cos_name cloud-object-storage standard global -g $resourcegroup`
+
+- Create the ROKS cluster:
+There is a CLI limitation that does not allow to create several zones deployment for nodes from the start, it needs to be added after, either change the `default` worker pool from `default`. Public endpoint is disable for security, public outbound connectivity is enable through the public gateways though. To get the flavors available on the zone/region `ibmcloud oc flavors --zone $zone_1`, to get the Openshift versions available `ibmcloud oc versions`. The recommended versions at the moment that this guide was written is `4.6.28_openshift`. To get the CRN (ID of teh storage instance) of the Object Storage instance, run `ibmcloud resource service-instance $cos_name`
+***There is a limitation with the CHECK ZONE LIMITATINO
+***
+`ibmcloud oc cluster create vpc-gen2 --name $cluster_name --vpc-id $vpc_id --workers 2 --version $version --flavor $flavor --zone $zone_1 --subnet-id $subnet-workers-1_id --cos-instance ${cos_id} --disable-public-service-endpoint`  
+
+To extend the default worker pool to the other two zones:
+<InlineNotification>
+To get the ROKS cluster ID run `ibmcloud oc clusters`
+</InlineNotification>
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-workers-2_id  --cluster $roks_id --zone $zone_2 --worker-pool default`
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-workers-3_id  --cluster $roks_id --zone $zone_3 --worker-pool default -q`
+
+This `default` worker pool can be used to host applications that doesn`t fit with the infra workloads, storage workloads or Cloud Pak workloads. To label the worker pool run:
+
+`ibmcloud oc worker-pool label set --cluster c2qe6p0r0lb7nqcc4bcg --worker-pool default --label node-role.kubernetes.io/workers=''`
+
+To create the Infra worker pool:
+If you are bringing your own license use the flag `cloud_pak` for the entitlement, in the case you want to consume the entitlement directly from IBM Cloud remove the flag.
+
+`ibmcloud oc worker-pool create vpc-gen2 --name infra --cluster $roks_id --flavor $flavor_infra --size-per-zone 1 --vpc-id $vpc_id --entitlement cloud_pak --label node-role.kubernetes.io/infra=''`
+
+Extending the worker pool across the three zones:
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-infra-1_id  --cluster $roks_id --zone $zone_1 --worker-pool infra`
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-infra-2_id  --cluster $roks_id --zone $zone_2 --worker-pool infra`
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-infra-3_id  --cluster $roks_id --zone $zone_3 --worker-pool infra`
+
+To create the Storage worker pool:
+If you are bringing your own license use the flag `cloud_pak` for the entitlement, in the case you want to consume the entitlement directly from IBM Cloud remove the flag.
+
+`ibmcloud oc worker-pool create vpc-gen2 --name storage --cluster $roks_id --flavor $flavor_storage --size-per-zone 1 --vpc-id $vpc_id --entitlement cloud_pak --label node-role.kubernetes.io/storage=''`
+
+Extending the worker pool across the three zones:
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-storage-1_id  --cluster $roks_id --zone $zone_1 --worker-pool storage`
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-storage-2_id  --cluster $roks_id --zone $zone_2 --worker-pool storage`
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-storage-3_id  --cluster $roks_id --zone $zone_3 --worker-pool storage`
+
+To create the Cloud Pak worker pool:
+If you are bringing your own license use the flag `cloud_pak` for the entitlement, in the case you want to consume the entitlement directly from IBM Cloud remove the flag.
+
+`ibmcloud oc worker-pool create vpc-gen2 --name cloud-paks  --cluster $roks_id --flavor $flavor_cloud-paks  --size-per-zone 1 --vpc-id $vpc_id --entitlement cloud_pak --label node-role.kubernetes.io/cloud-paks=''`
+
+Extending the worker pool across the three zones:
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-cloud-paks-1_id  --cluster $roks_id --zone $zone_1 --worker-pool cloud-paks`
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-cloud-paks-2_id  --cluster $roks_id --zone $zone_2 --worker-pool cloud-paks`
+
+`ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-cloud-paks-3_id  --cluster $roks_id --zone $zone_3 --worker-pool cloud-paks`
+
+
+- Installing GitOps operator:
+Retrieve the admin credentials for the cluster:
+`ibmcloud oc cluster config --cluster $roks_name --admin`
+
+Run `oc get nodes` to check you are logged in the cluster.
+
+Remove the master and worker labels from nodes, to apply the correct labels to each worker-pool:
+
+`oc get nodes | awk '{print $1}'|awk '{if(NR>1)print}' | xargs -I {} bash -c 'oc label node {} node-role.kubernetes.io/master-'`
+
+Apply the label to the infra nodes:
+
+`ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool default --label node-role.kubernetes.io/worker=true  -f`
+
+Apply the label to the cloud-paks nodes:
+
+`ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool cloud-paks --label node-role.kubernetes.io/cloud-paks=true  -f`
+
+Apply the label to the worker nodes:
+
+`ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool default --label node-role.kubernetes.io/worker=true  -f`
+
+Apply the taints to teh nodes to avoid workloas not related with taht node role to be placed in:
+
+For the cloud-paks nodes.
+
+`ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool cloud-paks --taint node-role.kubernetes.io/cloud-paks=true:NoSchedule -f`
+
+For the infra nodes.
+
+`ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool infra --taint node-role.kubernetes.io/infra=true:NoSchedule -f`
+
+Fork and clone the standard repo GitOps for IBM Cloud:
+`git clone https://github.com/cloud-native-toolkit/multi-tenancy-gitops.git`
+
+Install the GitOps operator `oc apply -f 2-services/operators/openshift-gitops/ -n openshift-operators`
+
+Add the ClusterRoles needed by ArgoCD  (GitOps) to Bootstrap te cluster `oc apply -f 3-infra/clusterrole/`
+
+Modify the bootstrap.yaml on the root folder file to point to the new forked repo:
+
+'''apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap
+spec:
+  destination:
+    namespace: openshift-gitops
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: 0-bootstrap/argocd/active
+    repoURL: $REPO_URL
+    targetRevision: master
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true'''
+
+
+To deploy the bootstrap app that will rollout the cluster components installation run:
+
+`oc apply -f bootstrap.yaml -n openshift-gitops`
+
+To grab the ArgoCD credentials and route to access to the dashboard run:
+
+password:
+
+`passwd_argocd=$(oc get secret argocd-cluster-cluster -n openshift-gitops -o json  | jq -r .data | jq -r .['admin.password'] | tail -1 | base64 -d)`
+
+route:
+
+`argo_route=$(oc get route argocd-cluster-server -n openshift-gitops -o json | jq -r '.spec.host')`
+
+If using Github Enterprise it is needed to authenticate against the repo. Follow the next steps:
+
+`argocd login ${argo_route} --username admin --password ${passwd_argocd} --insecure`
+
+Add the repo to the arggoCD instance, $github_password is a token created in Github Enterprise with permissions to read the repo:
+
+`argocd  repo add ${github_repo} --type git --name $repo_name_to_set --username ${github_username} --password  ${github_password} --insecure`
+
+The 3-layer structure works moving the items that needs to be set up on the cluster to the active folder. Modify the 3-infra.yaml file in the bootstrap/inactive folder, to point the repoURL and the sourceRepos keys to your repo. Move it to the active folder. Modify again the repoURL and the sourceRepos keys on the refarch-infraconfig.yaml in the 3-infra/argocd/inactive and movi it to the active folder. Push it to git.
+

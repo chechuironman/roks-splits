@@ -1,0 +1,133 @@
+---
+title: Red Hat Openshift Kubernetes Service on IBM Cloud
+description: Production Architecture on Red Hat Openshift Kubernetes Service
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps']
+---
+
+# Deploy ROKS
+---
+
+### Create a Cloud Object Storage instance to host the images of the registry among others:
+
+  ```
+ibmcloud resource service-instance-create $cos_name cloud-object-storage standard global -g $resourcegroup
+```
+
+### Create the ROKS cluster:
+There is a CLI limitation that does not allow the creation of several zones deployment for nodes from the start, it needs to be added after, either change the `default` worker pool from `default`, the `default` worker pool is deleted right after creation of the cluster. The public endpoint is disabled for security, public outbound connectivity is enabled through the public gateways though.     
+    
+<InlineNotification>
+To get the flavors available on the zone/region `ibmcloud oc flavors --zone $zone_1`. Use minimum flavor as the default pool will be deleted right after the cluster is created.
+
+To get the Openshift versions available `ibmcloud oc versions`. The recommended version at the moment that this guide was written is `4.7.19_openshift`. 
+
+To get the CRN (ID of the storage instance) of the Object Storage instance, run `ibmcloud resource service-instance $cos_name`.
+
+</InlineNotification>
+
+  ```
+    ibmcloud oc cluster create vpc-gen2 --name $cluster_name --vpc-id $vpc_id --workers 2 --version $version --flavor $flavor --zone $zone_1 --subnet-id $subnet-infra-1_id --cos-instance $cos_id --disable-public-service-endpoint --entitlement cloud_pak
+```
+
+To create the Foundational services worker pool:
+    
+<InlineNotification>
+The flavor recomended to deploy a minimum version of Foundational Services in the Infra nodes is `bx2.8x32`
+To get the ROKS cluster ID run `ibmcloud oc clusters`
+</InlineNotification>
+
+  ```
+    ibmcloud oc worker-pool create vpc-gen2 --name foundational-services --cluster $roks_id --flavor $flavor_infra --size-per-zone 1 --vpc-id $vpc_id --entitlement cloud_pak --label node-role.kubernetes.io/foundational-services=true
+```
+  ```
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-infra-1_id  --cluster $roks_id --zone $zone_1 --worker-pool foundational-services
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-infra-2_id  --cluster $roks_id --zone $zone_2 --worker-pool foundational-services
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-infra-3_id  --cluster $roks_id --zone $zone_3 --worker-pool foundational-services
+```
+
+<InlineNotification>
+Once there is another worker pool we can delete the default worker-pool
+  ```
+ibmcloud oc worker-pool rm --worker-pool default --cluster $roks_id
+```
+</InlineNotification>
+
+To create the Cloud Pak worker pool:
+    If you are bringing your own license use the flag `cloud_pak` for the entitlement, in the case you want to consume the entitlement directly from IBM Cloud remove the flag.
+  <InlineNotification>
+  The flavor for these ndoes will depend on the cloudpak that will be installed on them.
+  </InlineNotification>
+  ```
+    ibmcloud oc worker-pool create vpc-gen2 --name cloud-paks  --cluster $roks_id --flavor $flavor_cloud-paks  --size-per-zone 1 --vpc-id $vpc_id --entitlement cloud_pak --label node-role.kubernetes.io/cloud-paks=true
+```
+
+Extending the worker pool across the three zones:
+
+  ```
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-cloud-paks-1_id  --cluster $roks_id --zone $zone_1 --worker-pool cloud-paks
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-cloud-paks-2_id  --cluster $roks_id --zone $zone_2 --worker-pool cloud-paks
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-cloud-paks-3_id  --cluster $roks_id --zone $zone_3 --worker-pool cloud-paks
+```
+
+If you are deploying topologies ROKS-3 or ROKS-4, you need to create the Storage worker pool:
+    
+<InlineNotification>
+    The recommended storage class to run Openshift Data Foundation (previously Openshift Container Storage) is bx2.16x64
+</InlineNotification>
+
+If you are bringing your own license use the flag `cloud_pak` for the entitlement, in the case you want to consume the entitlement directly from IBM Cloud remove the flag.
+
+  ```
+    ibmcloud oc worker-pool create vpc-gen2 --name storage --cluster $roks_id --flavor $flavor_storage --size-per-zone 1 --vpc-id $vpc_id --entitlement cloud_pak --label node-role.kubernetes.io/storage=true
+```
+
+Extending the worker pool across the three zones:
+
+  ```
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-storage-1_id  --cluster $roks_id --zone $zone_1 --worker-pool storage
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-storage-2_id  --cluster $roks_id --zone $zone_2 --worker-pool storage
+    ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-storage-3_id  --cluster $roks_id --zone $zone_3 --worker-pool storage
+```
+
+
+
+
+The default roles assigned by IBM Cloud need to be changed, to remove them:
+Retrieve the admin credentials for the cluster:
+  ```
+    ibmcloud oc cluster config --cluster $roks_name --admin
+```
+<InlineNotification>
+Run `oc get nodes` to check you are logged in the cluster.
+</InlineNotification>
+
+Remove the master and worker role labels from nodes, to apply the correct labels to each worker-pool:
+
+  ```
+    oc get nodes | awk '{print $1}'|awk '{if(NR>1)print}' | xargs -I {} bash -c 'oc label node {} node-role.kubernetes.io/master-'
+    oc get nodes | awk '{print $1}'|awk '{if(NR>1)print}' | xargs -I {} bash -c 'oc label node {} node-role.kubernetes.io/worker-'
+
+```
+The worker nodes need to be labeled and tainted:    
+The `default` worker pool can be used to host applications that don`t fit with the infra workloads, storage workloads, or Cloud Pak workloads. To label the worker pool run:
+  ```
+    ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool default --label node-role.kubernetes.io/worker=''
+```
+Apply the label to the foundational services nodes (if not added when the worker pool was created):
+
+  ```
+    ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool foundational-services --label node-role.kubernetes.io/foundational-services=true  -f
+    ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool foundational-services --label node-role.kubernetes.io/master=""  -f
+```
+
+Apply the label to the cloud-paks nodes (if not added when the worker pool was created):
+
+  ```
+    ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool cloud-paks --label node-role.kubernetes.io/cloud-paks=true  -f
+```
+
+Apply the label to the worker nodes:
+
+  ```
+    ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool default --label node-role.kubernetes.io/worker=true  -f
+```

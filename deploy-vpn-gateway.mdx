@@ -1,0 +1,88 @@
+---
+title: Red Hat Openshift Kubernetes Service on IBM Cloud
+description: Production Architecture on Red Hat Openshift Kubernetes Service
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps']
+---
+
+# Deploy VPN Gateway to securely connect to ROKS
+---
+
+## Create a VPN  tunnel to connect to the VPC
+
+The documentation from IBM Cloud explains each parameter needed to establish the IPsec tunnel that will connect the location of our premises with the VPC on IBM Cloud.
+https://cloud.ibm.com/docs/vpc?topic=vpc-using-vpn
+
+<InlineNotification>
+IBM Cloud offers a set of recommendation parameters for a certain set of devices here:
+https://cloud.ibm.com/docs/vpc?topic=vpc-vpn-onprem-example
+</InlineNotification>
+
+<InlineNotification kind="warning">
+VMware is not on the list but this article describes how to get it on VMWare environments:
+"https://medium.com/ibm-garage/extending-on-premise-vmware-environment-with-an-ipsec-tunnel-to-consume-securely-ibm-cloud-13cc9326dce1"
+</InlineNotification>
+
+The next resources need to be created according to the previous recommendations or the requirements needed to establish the IPsec tunnel.
+
+### IKE-Policy:
+The options available for this parameter can be seen running this command `ibmcloud is ike-policy-create --help`
+    ```
+    ibmcloud is ike-policy-create $vpc_name $auth_algorithm_ike $dh_group_ike $encryption_ike $ike_version --key-lifetime $key_lifetime_ike --resource-group-name $resourcegroup
+    ```
+
+### IPsec-Policy:
+    The options available for this parameter can be seen running this command `ibmcloud is ipsec-policy-create --help`
+
+    ```
+    ibmcloud is ipsec-policy-create $vpc_name-ipsec $auth_algorithm_ipsec $encryption_ipsec $pfs_ipsec --key-lifetime $key_lifetime_ipsec --resource-group-name $resourcegroup
+    ```
+
+### Create the VPN-Gateway:
+    $vpn_subnet is the subnet where the VPN gateway will be deployed. It can be a dedicated subnet or one of the infra subnets
+
+    ```
+    ibmcloud is vpn-gateway-create $vpc_name $subnet-vpn-gw_ID --mode $policy --resource-group-name $resourcegroup
+    ```
+
+### Create an IPsec connection:
+    To check the parameters needed `ibmcloud is vpn-gateway-connection-create --help`. To get the id of the IKE policies run `ibmcloud is ike-policies` and to get the IPsec policies `ibmcloud is ipsec-policies`, to get the vpn gateway ID run `ibmcloud is vpn-gateways`:
+    ```
+    ibmcloud is vpn-gateway-connection-create $vpc_name $vpn_id $peer_address $pre_shared_key --ike-policy $ike_id --ipsec-policy $ipsec_id
+    ```
+
+If the policy selected was `route` based when the VPN Gateway was created, a route table is needed to be created:        
+    
+    <InlineNotification>
+    As an example here is described how to connect to a VMware environment as is described in the article shown above
+    </InlineNotification>
+    
+    ```
+    ibmcloud is vpc-routing-table-create $vpc_id --vpc-zone-ingress false --name $vpc_name
+    ```
+
+    Attach all the subnets to the route table, to get the ID of the route table run `ibmcloud is vpc-routing-tables`:
+    ```
+    ibmcloud is subnet-update  $subnet-infra-1_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-infra-2_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-infra-3_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-storage-1_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-storage-2_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-storage-3_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-cloud-paks-1_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-cloud-paks-2_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-cloud-paks-3_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-workers-1_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-workers-2_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-workers-3_ID --routing-table-id $route_table_ID
+    ibmcloud is subnet-update  $subnet-vpn-gw_ID --routing-table-id $route_table_ID
+    ```
+    To add the routes:
+    Each subnet needs a route to the remote network address range. $network_remote is the network address range of the remote network from which ROKS will be accessed. To get the connection ID run `ibmcloud is vpn-gateway-connections $vpn-gw_ID`
+    For example for infra subnets:
+    ```
+    ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-infra-1  --zone  $zone_1 --destination $network_remote --action deliver --next-hop $connection_id
+    ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-infra-2  --zone  $zone_2 --destination $network_remote --action deliver --next-hop $connection_id
+    ibmcloud is vpc-routing-table-route-create $vpc_id $route_table_id --name subnet-infra-3  --zone  $zone_3 --destination $network_remote --action deliver --next-hop $connection_id
+    ```
+
+

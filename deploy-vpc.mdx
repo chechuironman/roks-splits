@@ -1,0 +1,187 @@
+---
+title: Red Hat Openshift Kubernetes Service on IBM Cloud
+description: Production Architecture on Red Hat Openshift Kubernetes Service
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps']
+---
+
+# Deploy VPC to host ROKS 
+---
+
+
+### Select an IBM Cloud region ($region)
+
+To get the available regions for VPC run `ibmcloud is regions`  
+  ```
+    ibmcloud target -r $region  
+```  
+      
+
+### Create a resource group or use one already created
+
+To get the resource groups available `ibmcloud resource groups`. Create a group if necessary:  
+  ```
+    ibmcloud resource group-create $name
+``` 
+Select the group:
+  ```
+    ibmcloud target -g $name
+```
+
+### Create a VPC ($vpc_name)
+
+  ```
+    ibmcloud is vpc-create $vpc_name --resource-group-name $resourcegroup --address-prefix-management manual
+```
+
+### Create the IP address network ranges.
+
+It is needed to create one per node type and zone: infra, storage, cloudpaks, and workers. For example, for infra nodes, it is needed three IP address network ranges, one network range address per zone. The network ranges must be big enough to allocate IPs for all nodes of each type in each zone. $range must differ from one network range to other, it can be a created different ones if it creates the minimum number of IPs needed for the nodes. 
+<InlineNotification>
+To get available zones on the VPC region targetted run `ibmcloud is zones`, and to get the $vpc_id `ibmcloud is vpcs`:
+</InlineNotification>
+
+  ```
+    ibmcloud is vpc-address-prefix-create subnet-infra-1 $vpc_id $zone_1 192.168.$range_1.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-infra-2 $vpc_id $zone_3 192.168.$range_2.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-infra-3 $vpc_id $zone_3 192.168.$range_3.0/28
+```
+
+Repeat the process for the rest of the cloudpak node type:
+
+  ```
+    ibmcloud is vpc-address-prefix-create subnet-cloud-paks-1 $vpc_id $zone_1 192.168.$range_7.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-cloud-paks-2 $vpc_id $zone_3 192.168.$range_8.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-cloud-paks-3 $vpc_id $zone_3 192.168.$range_9.0/27
+```
+If you are deploying the architecture topology ROKS-3 or ROKS-4, where the cluster will host OpenShift Storage Container repeat the process for the storage node type:
+
+  ```
+    ibmcloud is vpc-address-prefix-create subnet-storage-1 $vpc_id $zone_1 192.168.$range_4.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-storage-2 $vpc_id $zone_3 192.168.$range_5.0/28
+
+    ibmcloud is vpc-address-prefix-create subnet-storage-3 $vpc_id $zone_3 192.168.$range_6.0/28
+```
+
+If you are deploying the architecture topology ROKS-2 or ROKS-4, where the cluster will host applications repeat the process for the worker node type:
+
+  ```
+    ibmcloud is vpc-address-prefix-create subnet-workers-1 $vpc_id $zone_1 192.168.$range_10.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-workers-2 $vpc_id $zone_3 192.168.$range_11.0/27
+
+    ibmcloud is vpc-address-prefix-create subnet-workers-3 $vpc_id $zone_3 192.168.$range_12.0/27
+```
+
+Create an IP address network range for the subnet where the VPN Gateway will be deployed:
+
+  ```
+    ibmcloud is vpc-address-prefix-create subnet-vpn-gw $vpc_id $zone_1 192.168.$range_13.0/29
+```
+
+### Create the subnets.
+
+It is needed to create one per node type and zone: infra, storage, cloudpaks, and workers. For example, for infra nodes, it is needed three subnets, one subnet per zone. It is needed to apply the IP address range to each subnet. For example, for infra nodes:
+
+  ```
+    ibmcloud is subnet-create subnet-infra-1 $vpc_id --ipv4-cidr-block 192.168.$range_1.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-infra-2 $vpc_id --ipv4-cidr-block 192.168.$range_2.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-infra-3 $vpc_id --ipv4-cidr-block 192.168.$range_3.0/28 --resource-group-name $resourcegroup
+```
+Repeat the process for the cloudpak node type:
+  ```
+    ibmcloud is subnet-create subnet-cloud-paks-1 $vpc_id --ipv4-cidr-block 192.168.$range_7.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-cloud-paks-2 $vpc_id --ipv4-cidr-block 192.168.$range_8.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-cloud-paks-3 $vpc_id --ipv4-cidr-block 192.168.$range_9.0/27 --resource-group-name $resourcegroup
+```
+
+If you are deploying the architecture topology ROKS-3 or ROKS-4, where the cluster will host OpenShift Storage Container repeat the process for the storage node type:
+  ```
+    ibmcloud is subnet-create subnet-storage-1 $vpc_id --ipv4-cidr-block 192.168.$range_4.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-storage-2 $vpc_id --ipv4-cidr-block 192.168.$range_5.0/28 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-storage-3 $vpc_id --ipv4-cidr-block 192.168.$range_6.0/28 --resource-group-name $resourcegroup
+```
+
+If you are deploying the architecture topology ROKS-2 or ROKS-4, where the cluster will host applications repeat the process for the worker node type:
+  ```
+    ibmcloud is subnet-create subnet-workers-1 $vpc_id --ipv4-cidr-block 192.168.$range_10.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-workers-2 $vpc_id --ipv4-cidr-block 192.168.$range_11.0/27 --resource-group-name $resourcegroup
+
+    ibmcloud is subnet-create subnet-worker-3 $vpc_id --ipv4-cidr-block 192.168.$range_12.0/27 --resource-group-name $resourcegroup
+```
+
+Create the subnet to place the VPN Gateway:
+
+  ```
+    ibmcloud is subnet-create subnet-vpn-gw $vpc_id --ipv4-cidr-block 192.168.$range_13.0/29 --resource-group-name $resourcegroup
+```
+
+### Create Public Gateways for outbound connectivity.
+It is needed to create one per zone.
+
+  ```
+    ibmcloud is public-gateway-create gw-subnet-zone-1 $vpc_id $zone_1
+
+    ibmcloud is public-gateway-create gw-subnet-zone-2 $vpc_id $zone_2
+
+    ibmcloud is public-gateway-create gw-subnet-zone-3 $vpc_id $zone_3
+```
+Attach the public gateways on all the subnets that need outbound connectivity to the Internet. 
+<InlineNotification>
+Run `ibmcloud is subnets` to get the subnets ID, and `ibmcloud is public-gateways` to get the public gateway ID:
+</InlineNotification>
+
+  ```
+    ibmcloud is subnet-update $subnet-infra-1_id --public-gateway-id $gw-subnet-zone-1_id
+
+    ibmcloud is subnet-update $subnet-infra-2_id --public-gateway-id $gw-subnet-zone-2_id
+
+    ibmcloud is subnet-update $subnet-infra-3_id --public-gateway-id $gw-subnet-zone-3_id
+
+    ibmcloud is subnet-update $subnet-cloud-paks-1_id --public-gateway-id $gw-subnet-zone-1_id
+
+    ibmcloud is subnet-update $subnet-cloud-paks-2_id --public-gateway-id $gw-subnet-zone-2_id
+
+    ibmcloud is subnet-update $subnet-cloud-paks-3_id --public-gateway-id $gw-subnet-zone-3_id
+```
+
+If you are deploying the architecture topology ROKS-3 or ROKS-4, where the cluster will host OpenShift Storage Container repeat the process for the storage node type:
+  ```  
+    ibmcloud is subnet-update $subnet-workers-1_id --public-gateway-id $gw-subnet-zone-1_id
+
+    ibmcloud is subnet-update $subnet-workers-2_id --public-gateway-id $gw-subnet-zone-2_id
+
+    ibmcloud is subnet-update $subnet-workers-3_id --public-gateway-id $gw-subnet-zone-3_id
+```  
+
+If you are deploying the architecture topology ROKS-2 or ROKS-4, where the cluster will host applications repeat the process for the worker node type:  
+  ```  
+    ibmcloud is subnet-update $subnet-workers-1_id --public-gateway-id $gw-subnet-zone-1_id
+
+    ibmcloud is subnet-update $subnet-workers-2_id --public-gateway-id $gw-subnet-zone-2_id
+
+    ibmcloud is subnet-update $subnet-workers-3_id --public-gateway-id $gw-subnet-zone-3_id
+```
+
+Modify the Security Group:
+
+<InlineNotification>
+Run `ibmcloud is security-groups` to get the securitty groups ID.
+</InlineNotification>
+  ```
+  ibmcloud is security-group-update $security-group_ID --name $(vpc-name)-sec-group
+```
+<InlineNotification>
+WORK IN PROGRESS
+</InlineNotification>

@@ -1,63 +1,26 @@
-# Cloud Native Toolkit Deployment Guides
+# ROKS Production Deployment Guide
+There are 4 proposed topologies depending on the dedploymment requirements, choose the one that adapts better to your needs.
 
-## Apply demo sealedsecret key to all clusters
-Download [sealed-secrets-ibm-demo-key.yaml](https://bit.ly/demo-sealed-master) and apply it to the cluster.
-```
-oc apply -f sealed-secrets-ibm-demo-key.yaml
+ROKS-split-1:
 
-oc delete pod -n sealed-secrets -l app.kubernetes.io/name=sealed-secrets
-```
-#DO NOT CHECK INTO GIT.   
-```
-rm sealed-secrets-ibm-demo-key.yaml
-```
+![Target Architecture](./images/IBM_VPC_ROKS_split-1.jpg)
 
-For Cloud Pak to consume the entitlement key, restart the Platform Navigator pods
-```
-oc delete pod -n tools -l app.kubernetes.io/name=ibm-integration-platform-navigator
-```
+ROKS-split-2:
 
+![Target Architecture](./images/IBM_VPC_ROKS_split-2.jpg)
 
-## Install OpenShfit GitOps (ArgoCD)
-To get started setup gitops operator and rbac on each cluster
+ROKS-split-3:
 
-- For OpenShift 4.7+ use the following:
-```
-oc apply -f setup/ocp47/
-while ! kubectl wait --for=condition=Established crd applications.argoproj.io; do sleep 30; done
-oc extract secrets/openshift-gitops-cluster --keys=admin.password -n openshift-gitops --to=-
-```
+![Target Architecture](./images/IBM_VPC_ROKS_split-3.jpg)
 
-- For OpenShift 4.6 use the following:
-```
-oc apply -f setup/ocp46/
-while ! kubectl wait --for=condition=Established crd applications.argoproj.io; do sleep 30; done
-```
+ROKS-split-4:
 
-Once ArgoCD is deploy get the `admin` password
-```
-oc extract secrets/argocd-cluster-cluster --keys=admin.password -n openshift-gitops --to=-
-```
-
-## Install the ArgoCD Application Bootstrap
-Apply the bootstrap profile, to use the default `single-cluster` scenario use the following command:
-```
-oc apply -n openshift-gitops -f 0-bootstrap/argocd/bootstrap.yaml
-```
-
-For other profile clusters set environment variable `TARGET_CLUSTER` then apply the profile
-
-**shared-cluster**:
-```
-TARGET_CLUSTER=0-bootstrap/argocd/others/1-shared-cluster/bootstrap-cluster-1-cicd-dev-stage-prod.yaml
-
-TARGET_CLUSTER=0-bootstrap/argocd/others/1-shared-cluster/bootstrap-cluster-n-prod.yaml
-```
-Now apply the profile
-```
-echo TARGET_CLUSTER=${TARGET_CLUSTER}
-oc apply -n openshift-gitops -f ${TARGET_CLUSTER}
-```
+![Target Architecture](./images/IBM_VPC_ROKS_split-4.jpg)
 
 
-This repository shows the reference architecture for gitops directory structure for more info https://cloudnativetoolkit.dev/learning/gitops-int/gitops-with-cloud-native-toolkit
+This guide divides in 4 parts:
+
+- Set up the VPC in IBM Cloud
+- Create the VPN gateway to secure connect to te VPC
+- Deploy the cluster. 4 Topologies recommended
+- Deploy the GitOps strategy

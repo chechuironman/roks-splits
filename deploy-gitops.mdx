@@ -1,0 +1,116 @@
+---
+title: Red Hat Openshift Kubernetes Service on IBM Cloud
+description: Production Architecture on Red Hat Openshift Kubernetes Service
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps']
+---
+
+# Deploy GitOps
+---
+
+Log into the ROOKOS cluster:
+
+  ```
+    ibmcloud oc cluster config --cluster $roks_name --admin
+```
+
+### Installing GitOps operator:
+
+Fork and clone the standard repo GitOps for IBM Cloud:
+  ```
+    git clone https://github.ibm.com/jesus-arteche/roks-splits.git
+```
+
+Install the GitOps operator 
+  ```
+    oc apply -f setup/ocp47/openshift-gitops-operator.yaml
+```
+
+Add the ClusterRoles needed by ArgoCD  (GitOps) to Bootstrap the cluster 
+  ```
+    oc apply -f setup/ocp47/custom-argocd-app-controller-clusterrole.yaml 
+    oc apply -f setup/ocp47/custom-argocd-app-controller-clusterrolebinding.yaml
+
+```
+
+### Apply the 3-layer GitOps structure
+
+Wait until the GitOps operator is successfully deployed before deploy the Bootstrap ArgoCD application.
+Modify the bootstrap.yaml on the root folder file to point to the newly forked repo:
+ 
+
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+    name: bootstrap
+    spec:
+    destination:
+        namespace: openshift-gitops
+        server: https://kubernetes.default.svc
+    project: default
+    source:
+        path: 0-bootstrap/argocd/active
+        repoURL: $YOUR_REPO_URL
+        targetRevision: master
+    syncPolicy:
+        automated:
+        prune: true
+        selfHeal: true
+
+
+
+To deploy the bootstrap app that will roll out the cluster components installation run:
+
+  ```
+    oc apply -f 0-bootstrap/argocd/bootstrap.yaml -n openshift-gitops
+```
+
+To grab the ArgoCD credentials and route to access to the dashboard run:
+
+password:
+
+  ```
+    passwd_argocd=$(oc get secret openshift-gitops-cluster -n openshift-gitops -o json  | jq -r .data | jq -r .['admin.password'] | tail -1 | base64 -d)
+```
+
+route:
+
+  ```
+    argo_route=$(oc get route openshift-gitops-server -n openshift-gitops -o json | jq -r '.spec.host')
+```
+
+If using Github Enterprise it is needed to authenticate against the repo. Follow the next steps:
+
+  ```
+    argocd login ${argo_route} --username admin --password ${passwd_argocd} --insecure
+```
+
+Add the repo to the arggoCD instance, $github_password is a token created in Github Enterprise with permissions to read the repo:
+
+  ```
+    argocd  repo add ${github_repo} --type git --name $repo_name_to_set --username ${github_username} --password  ${github_password} --insecure
+```
+
+The 3-layer structure works by moving the items that need to be set up on the cluster to the active folder. Modify the 3-infra.yaml file in the bootstrap/inactive folder, to point the repoURL and the sourceRepos keys to your repo. Move it to the active folder. Modify again the repoURL and the sourceRepos keys on the refarch-infraconfig.yaml in the 3-infra/argocd/inactive and move it to the active folder. Push it to git.
+
+oc apply -f 0-bootstrap/argocd/bootstrap.yaml -n openshift-gitops
+
+
+Apply the taints to the nodes to avoid workloads not related to that node role to be placed in:
+
+For the cloud-paks nodes.
+
+  ```
+    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool cloud-paks --taint node-role.kubernetes.io/cloud-paks=true:NoSchedule -f
+```
+
+For the Foundational Services nodes.
+
+  ```
+    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool foundational-services --taint node-role.kubernetes.io/foundational-services=true:NoSchedule -f
+```
+
+If you are deploying topologies ROKS-3 or ROKS-4, you need to apply the Storage nodes taints:
+
+  ```
+    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool storage --taint node-role.kubernetes.io/storage=true:NoSchedule -f
+```

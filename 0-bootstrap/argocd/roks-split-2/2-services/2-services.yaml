@@ -5,9 +5,8 @@ metadata:
   name: services
 spec:
   sourceRepos:
-  - https://github.ibm.com/jesus-arteche/roks-split-1.git
+  - https://github.ibm.com/jesus-arteche/roks-split-2.git
   - https://github.ibm.com/jesus-arteche/roks-services.git
-  # - https://cloud-native-toolkit.github.io/toolkit-charts/
   - https://github.com/cloud-native-toolkit/multi-tenancy-gitops-services.git
   destinations:
   - namespace: cloudpak
@@ -91,7 +90,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: 0-bootstrap/argocd/roks-split-1/2-services
+    path: 0-bootstrap/argocd/roks-split-2/2-services
     repoURL: https://github.ibm.com/jesus-arteche/roks-split-1
     targetRevision: master
   syncPolicy:
