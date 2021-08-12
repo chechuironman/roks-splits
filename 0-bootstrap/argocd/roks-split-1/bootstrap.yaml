@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     path: 0-bootstrap/argocd/roks-split-1
-    repoURL: https://github.ibm.com/jesus-arteche/roks-split-1
+    repoURL: https://github.ibm.com/jesus-arteche/roks-splits
     targetRevision: master
   syncPolicy:
     automated:
