@@ -37,3 +37,4 @@ This guide divides in 4 parts:
 - [Create the VPN gateway to secure connect to te VPC](./deploy-vpn-gateway.mdx)
 - [Deploy the cluster. 4 Topologies recommended](./deploy-roks.mdx)
 - [Deploy the GitOps strategy](./deploy-gitops.mdx)
+
