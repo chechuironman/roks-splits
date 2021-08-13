@@ -1,3 +1,9 @@
+---
+title: Red Hat Openshift Kubernetes Service on IBM Cloud
+description: Production Architecture on Red Hat Openshift Kubernetes Service
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps']
+---
+
 # Deploy ROKS
 ---
 
@@ -8,7 +14,7 @@ ibmcloud resource service-instance-create $cos_name cloud-object-storage standar
 ```
 
 ### Create the ROKS cluster:
-There is a CLI limitation that does not allow the creation of several zones deployment for nodes from the start, it needs to be added after, either change the `default` worker pool from `default`, the `default` worker pool is deleted right after creation of the cluster. The public endpoint is disabled for security, public outbound connectivity is enabled through the public gateways though.     
+There is a CLI limitation that does not allow the creation of several zones deployment for nodes from the start, it needs to be added after, either change the `default` worker pool from `default`, the `default` worker pool is deleted right after the creation of the cluster. The public endpoint is disabled for security, public outbound connectivity is enabled through the public gateways though.     
     
 <InlineNotification>
 To get the flavors available on the zone/region `ibmcloud oc flavors --zone $zone_1`. Use minimum flavor as the default pool will be deleted right after the cluster is created.
@@ -26,7 +32,7 @@ To get the CRN (ID of the storage instance) of the Object Storage instance, run 
 To create the Foundational services worker pool:
     
 <InlineNotification>
-The flavor recomended to deploy a minimum version of Foundational Services in the Infra nodes is `bx2.8x32`
+The flavor recommended to deploy a minimum version of Foundational Services in the Infra nodes is `bx2.8x32`
 To get the ROKS cluster ID run `ibmcloud oc clusters`
 </InlineNotification>
 
@@ -40,7 +46,7 @@ To get the ROKS cluster ID run `ibmcloud oc clusters`
 ```
 
 <InlineNotification>
-Once there is another worker pool we can delete the default worker-pool
+If you are deploying topologies ROKS-1 or ROKS-3. Once there is another worker pool, we can delete the default worker-pool
   ```
 ibmcloud oc worker-pool rm --worker-pool default --cluster $roks_id
 ```
@@ -49,7 +55,7 @@ ibmcloud oc worker-pool rm --worker-pool default --cluster $roks_id
 To create the Cloud Pak worker pool:
     If you are bringing your own license use the flag `cloud_pak` for the entitlement, in the case you want to consume the entitlement directly from IBM Cloud remove the flag.
   <InlineNotification>
-  The flavor for these ndoes will depend on the cloudpak that will be installed on them.
+  The flavor for these nodes will depend on the cloudpak that will be installed on them.
   </InlineNotification>
   ```
     ibmcloud oc worker-pool create vpc-gen2 --name cloud-paks  --cluster $roks_id --flavor $flavor_cloud-paks  --size-per-zone 1 --vpc-id $vpc_id --entitlement cloud_pak --label node-role.kubernetes.io/cloud-paks=true
@@ -73,6 +79,10 @@ If you are bringing your own license use the flag `cloud_pak` for the entitlemen
 
   ```
     ibmcloud oc worker-pool create vpc-gen2 --name storage --cluster $roks_id --flavor $flavor_storage --size-per-zone 1 --vpc-id $vpc_id --entitlement cloud_pak --label node-role.kubernetes.io/storage=true
+```
+It is needed to apply the Openshift Container Storage addon from IBM Cloud to the cluster, that will deploy the specific CRD for OOpenshift Data Foundation from IBM Cloud:
+  ```
+    ibmcloud oc cluster addon enable openshift-container-storage --cluster $roks_id
 ```
 
 Extending the worker pool across the three zones:
