@@ -36,4 +36,4 @@ This guide divides in 4 parts:
 - [Set up the VPC in IBM Cloud](./deploy-vpc.mdx)
 - [Create the VPN gateway to secure connect to te VPC](./deploy-vpn-gateway.mdx)
 - [Deploy the cluster. 4 Topologies recommended](./deploy-roks.mdx)
-- [Deploy the GitOps strategy)(./deploy-gitops.mdx)
+- [Deploy the GitOps strategy](./deploy-gitops.mdx)
