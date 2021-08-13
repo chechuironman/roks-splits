@@ -107,9 +107,9 @@ If using Github Enterprise it is needed to authenticate against the repo. Follow
 Add the following repos to the argoCD instance, $github_password is a token created in Github Enterprise with permissions to read the repo:
 
   ```
-    argocd  repo add https://github.ibm.com/jesus-arteche/roks-splits --type git --name roks-splits --username ${github_username} --password  ${github_password} --insecure
-    argocd  repo add https://github.ibm.com/jesus-arteche/roks-infra --type git --name roks-infra --username ${github_username} --password  ${github_password} --insecure
-    argocd  repo add https://github.ibm.com/jesus-arteche/roks-services --type git --name roks-services --username ${github_username} --password  ${github_password} --insecure
+    argocd  repo add https://github.com/chechuironman/roks-splits --type git --name roks-splits --username ${github_username} --password  ${github_password} --insecure
+    argocd  repo add https://github.com/chechuironman/roks-infra --type git --name roks-infra --username ${github_username} --password  ${github_password} --insecure
+    argocd  repo add https://github.com/chechuironman/roks-services --type git --name roks-services --username ${github_username} --password  ${github_password} --insecure
 
 
 ```
