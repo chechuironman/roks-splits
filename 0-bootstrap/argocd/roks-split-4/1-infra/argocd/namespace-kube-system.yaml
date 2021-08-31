@@ -1,16 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: bootstrap-roks-split-3
-  namespace: openshift-gitops
+  name: namespace-kubesystem
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
 spec:
   destination:
-    namespace: openshift-gitops
+    namespace: kube-system
     server: https://kubernetes.default.svc
-  project: default
+  project: infra
   source:
-    path: 0-bootstrap/argocd/roks-split-3
-    repoURL: https://github.ibm.com/jesus-arteche/roks-splits
+    path: namespaces/kube-system
+    repoURL: https://https://github.ibm.com/jesus-arteche/roks-infra
     targetRevision: master
   syncPolicy:
     automated:

@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: storage
+  annotations:
+    argocd.argoproj.io/sync-wave: "110"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: openshift-storage
+    server: https://kubernetes.default.svc
+  project: infra
+  source:
+    path: odf-ibm
+    repoURL: https://github.ibm.com/jesus-arteche/roks-infra
+    targetRevision: master
+    helm:
+      values: |
+        default-lb:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: myloadbalancer
+            annotations:
+              service.kubernetes.io/ibm-load-balancer-cloud-provider-ip-type: "private"
+              service.kubernetes.io/ibm-load-balancer-cloud-provider-vpc-subnets: "02q7-cef836b9-7daa-4d12-b7ec-19365d769e51,02r7-a01804bb-74b5-4042-90de-ae7c86275091"
+          spec:
+          type: LoadBalancer
+          selector:
+              <selector_key>: <selector_value>
+          ports:
+            - name: http
+              protocol: TCP
+              port: 8080
+              targetPort: 8080
+            - name: https
+              protocol: TCP
+              port: 443
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

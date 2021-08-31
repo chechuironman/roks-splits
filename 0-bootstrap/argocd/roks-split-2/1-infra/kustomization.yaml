@@ -25,6 +25,7 @@ resources:
 - argocd/refarch-infraconfig.yaml
 #- argocd/refarch-machinesets.yaml
 #- argocd/storageclass-cp4a.yaml
+- argocd/default-lb.yaml
 
 
 
