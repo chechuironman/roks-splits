@@ -13,7 +13,7 @@ spec:
   project: infra
   source:
     path: consolelink
-    repoURL: https://github.ibm.com/jesus-arteche/roks-infra.git
+    repoURL: https://github.com/chechuironman/roks-infra.git
     targetRevision: master
   syncPolicy:
     automated:

@@ -5,8 +5,8 @@ metadata:
   name: services
 spec:
   sourceRepos:
-  - https://github.ibm.com/jesus-arteche/roks-split-2.git
-  - https://github.ibm.com/jesus-arteche/roks-services.git
+  - https://github.com/chechuironman/roks-split-2.git
+  - https://github.com/chechuironman/roks-services.git
   - https://github.com/cloud-native-toolkit/multi-tenancy-gitops-services.git
   destinations:
   - namespace: cloudpak
@@ -91,7 +91,7 @@ spec:
   project: default
   source:
     path: 0-bootstrap/argocd/roks-split-2/2-services
-    repoURL: https://github.ibm.com/jesus-arteche/roks-splits
+    repoURL: https://github.com/chechuironman/roks-splits
     targetRevision: master
   syncPolicy:
     automated:

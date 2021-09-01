@@ -18,6 +18,7 @@ resources:
 - argocd/namespace-openshift-operators.yaml
 - argocd/namespace-openshift-pipelines.yaml
 - argocd/namespace-ibm-foundations.yaml
+- argocd/namespace-kube-system.yaml
 # - argocd/namespace-cpd-operators.yaml
 # - argocd/namespace-cpd-instance.yaml
 # - argocd/namespace-cpd-instance-tether.yaml

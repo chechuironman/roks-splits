@@ -5,8 +5,8 @@ metadata:
   name: infra
 spec:
   sourceRepos:
-  - https://github.ibm.com/jesus-arteche/roks-split-4
-  - https://github.ibm.com/jesus-arteche/roks-infra
+  - https://github.com/chechuironman/roks-split-4
+  - https://github.com/chechuironman/roks-infra
   destinations:
   - namespace: sealed-secrets
     server: https://kubernetes.default.svc
@@ -89,7 +89,7 @@ spec:
   project: default
   source:
     path: 0-bootstrap/argocd/roks-split-4/1-infra
-    repoURL: https://github.ibm.com/jesus-arteche/roks-splits
+    repoURL: https://github.com/chechuironman/roks-splits
     targetRevision: master
   syncPolicy:
     automated:

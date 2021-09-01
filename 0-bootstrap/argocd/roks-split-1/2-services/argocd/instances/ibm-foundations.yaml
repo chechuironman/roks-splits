@@ -13,7 +13,7 @@ spec:
   project: services
   source:
     path: instances/ibm-foundation
-    repoURL: https://github.ibm.com/jesus-arteche/roks-services
+    repoURL: https://github.com/chechuironman/roks-services
     targetRevision: master
   syncPolicy:
     automated:
