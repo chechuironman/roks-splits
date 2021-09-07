@@ -24,6 +24,7 @@ resources:
 # - argocd/namespace-cpd-instance-tether.yaml
 - argocd/odf-ibm.yaml
 - argocd/refarch-infraconfig.yaml
+- argocd/router-default-pro.yaml
 #- argocd/refarch-machinesets.yaml
 #- argocd/storageclass-cp4a.yaml
 

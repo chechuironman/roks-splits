@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: router-default-pro
+  annotations:
+    argocd.argoproj.io/sync-wave: "110"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: openshift-ingress
+    server: https://kubernetes.default.svc
+  project: infra
+  source:
+    path: router-default-pro
+    repoURL: https://github.com/chechuironman/roks-infra
+    targetRevision: master
+    helm:
+      values: |
+        router-default-pro:
+          router:
+            subnets: 02q7-cef836b9-7daa-4d12-b7ec-19365d769e51,02r7-a01804bb-74b5-4042-90de-ae7c86275091
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
