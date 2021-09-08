@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: namespace-openshift-console-operator
+  name: namespace-openshift-cluster-storage-operator
   annotations:
     argocd.argoproj.io/sync-wave: "100"
 spec:
@@ -10,7 +10,7 @@ spec:
     server: https://kubernetes.default.svc
   project: infra
   source:
-    path: namespaces/openshift-console-operator
+    path: namespaces/openshift-cluster-storage-operator
     repoURL: https://github.com/chechuironman/roks-infra
     targetRevision: master
   syncPolicy:
