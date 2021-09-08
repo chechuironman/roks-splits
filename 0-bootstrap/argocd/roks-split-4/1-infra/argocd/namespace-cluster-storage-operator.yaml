@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: openshift-cluster-storage-operator-namespace
+  name: namespace-cluster-storage-operator
   annotations:
     argocd.argoproj.io/sync-wave: "100"
 spec:
