@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: namespace-openshift-console-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "100"
+spec:
+  destination:
+    namespace: ci
+    server: https://kubernetes.default.svc
+  project: infra
+  source:
+    path: namespaces/openshift-console-operator
+    repoURL: https://github.com/chechuironman/roks-infra
+    targetRevision: master
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
