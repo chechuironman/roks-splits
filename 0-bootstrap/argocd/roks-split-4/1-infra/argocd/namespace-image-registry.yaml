@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: namespace-cluster-storage-operator
+  name: namespace-image-registry
   annotations:
     argocd.argoproj.io/sync-wave: "100"
 spec:
@@ -10,7 +10,7 @@ spec:
     server: https://kubernetes.default.svc
   project: infra
   source:
-    path: namespaces/openshift-cluster-storage-operator
+    path: namespaces/openshift-image-registry.yaml
     repoURL: https://github.com/chechuironman/roks-infra
     targetRevision: master
   syncPolicy:
