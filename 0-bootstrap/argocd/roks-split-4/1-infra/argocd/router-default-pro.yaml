@@ -19,7 +19,7 @@ spec:
       values: |
         router-default-pro:
           router:
-            subnets: 02q7-cef836b9-7daa-4d12-b7ec-19365d769e51,02r7-a01804bb-74b5-4042-90de-ae7c86275091
+            subnets: 02q7-4e92cf22-0a6f-4473-99f3-c0b545ed5edd,02r7-5a4a7516-3265-4d66-b685-f592a734b0ce
   syncPolicy:
     automated:
       prune: true
