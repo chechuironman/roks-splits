@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: ibm-foundations-instance
   annotations:
-    argocd.argoproj.io/sync-wave: "250"
+    argocd.argoproj.io/sync-wave: "215"
   labels:
     gitops.tier.group: ibm-foundation
 spec:
