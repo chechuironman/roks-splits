@@ -21,9 +21,9 @@ spec:
           ocs:
             storageClass: ibmc-vpc-block-metro-10iops-tier  
             sizeOSD: 512Gi
-            worker_ip_1: 192.168.6.10
-            worker_ip_2: 192.168.4.7
-            worker_ip_3: 192.168.5.8
+            worker_ip_1: 192.168.6.14
+            worker_ip_2: 192.168.4.8
+            worker_ip_3: 192.168.5.12
             billingType: advanced
   syncPolicy:
     automated:
