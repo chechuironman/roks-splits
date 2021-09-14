@@ -71,6 +71,8 @@ spec:
     kind: ClusterRoleBinding
   - group: "rbac.authorization.k8s.io"
     kind: ClusterRole
+  - group: "clustersecretstores.external-secrets.io"
+    kind: apiextensions.k8s.io
   roles:
   # A role which provides read-only access to all applications in the project
   - name: read-only
