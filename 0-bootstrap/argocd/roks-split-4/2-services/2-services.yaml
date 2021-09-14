@@ -72,7 +72,7 @@ spec:
   - group: "rbac.authorization.k8s.io"
     kind: ClusterRole
   - group: "externalsecrets.external-secrets.io"
-    kind: apiextensions.k8s.io
+    kind: apiextensions
   roles:
   # A role which provides read-only access to all applications in the project
   - name: read-only
