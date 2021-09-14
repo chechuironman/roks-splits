@@ -1,0 +1,20 @@
+apiVersion: keymanagement.ibm/v1
+kind: SecretTemplate
+metadata:
+  name: ibm-entitlement-key
+  annotations:
+    key-manager: key-protect
+    key-protect/instanceId: 537e29c8-001e-4916-9f31-c2b902fbd9cf
+    key-protect/region: eu-de
+spec:
+  labels: {}
+  annotations: {}
+  values:
+    - name: docker-username
+      value: cp
+    - name: docker-server
+      value: cp.icr.io
+    - name: namespace
+      value: cloudpaks
+    - name: docker-password
+      keyId: 91910540-7d00-4a6f-8d9e-7ea63770ec97
