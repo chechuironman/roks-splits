@@ -258,6 +258,12 @@ rules:
       - customresourcedefinitions
     verbs:
       - "*"  
+  - apiGroups:
+      - external-secrets.io
+    resources:
+      - secretstores
+    verbs:
+      - "*"  
 # for one-click to send operand request to ibm-common-services
   - apiGroups:
       - operator.ibm.com
