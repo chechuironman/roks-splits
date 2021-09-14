@@ -9,6 +9,8 @@ spec:
   - https://github.com/chechuironman/roks-services.git
   - https://github.com/cloud-native-toolkit/multi-tenancy-gitops-services.git
   destinations:
+  - namespace: external-secrets
+    server: https://kubernetes.default.svc
   - namespace: cloudpak
     server: https://kubernetes.default.svc
   - namespace: openshift-gitops

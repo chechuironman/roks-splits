@@ -8,7 +8,7 @@ spec:
   - https://github.com/chechuironman/roks-split-4
   - https://github.com/chechuironman/roks-infra
   destinations:
-  - namespace: sealed-secrets
+  - namespace: external-secrets
     server: https://kubernetes.default.svc
   - namespace: instana-agent
     server: https://kubernetes.default.svc
