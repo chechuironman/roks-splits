@@ -45,6 +45,7 @@ resources:
 # - argocd/operators/sealed-secrets.yaml
 # - argocd/instances/sealed-secrets-instance.yaml
 - argocd/operators/external-secret-operator.yaml
+- argocd/instances/ibm-external-secrets.yaml
 # CICD
 #- argocd/operators/grafana.yaml
 #- argocd/instances/grafana-instance.yaml

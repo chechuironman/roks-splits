@@ -252,6 +252,12 @@ rules:
       - ibmcpds
     verbs:
       - "*"  
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - "*"  
 # for one-click to send operand request to ibm-common-services
   - apiGroups:
       - operator.ibm.com
