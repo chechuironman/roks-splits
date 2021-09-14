@@ -21,7 +21,7 @@ resources:
 - argocd/namespace-kube-system.yaml
 - argocd/namespace-openshift-cluster-storage-operator.yaml
 - argocd/namespace-image-registry.yaml
-- argocd/namespace-external-secres.yaml
+- argocd/namespace-external-secrets.yaml
 # - argocd/namespace-cpd-operators.yaml
 # - argocd/namespace-cpd-instance.yaml
 # - argocd/namespace-cpd-instance-tether.yaml
