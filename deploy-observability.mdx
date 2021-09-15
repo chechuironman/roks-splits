@@ -1,0 +1,118 @@
+---
+title: Red Hat Openshift Kubernetes Service on IBM Cloud
+description: Production Architecture on Red Hat Openshift Kubernetes Service
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps','Deploy Observability','Establish Security Perimeter']
+---
+
+# Deploy Observability
+---
+
+Log into the ROKS cluster:
+
+  ```
+    ibmcloud oc cluster config --cluster $roks_name --admin
+```
+
+## Monitoring:
+
+Create the monitoring instance to use:
+
+<InlineNotification>
+It is possible to use an already provisioned instance 
+</InlineNotification>
+<InlineNotification>
+You can find the service tiers for monitoring [here](https://cloud.ibm.com/docs/monitoring?topic=monitoring-pricing_plans).
+You can find the locations [here](ibmcloud regions)
+</InlineNotification>
+  ```
+    ibmcloud resource service-instance-create $monitoring_instance_name sysdig-monitor $service_tier $location  -p '{"default_receiver": false,"external_api_auth": "API_AUTH"}'
+```
+Once the instance is created, we neeed to create the key to access to the instance from Openshift with "Writer" access:
+  ```
+    ibmcloud resource service-key-create $monitoring_instance_access_key_name Writer --instance-name $monitoring_instance_name
+```
+The output of the key creation should give us two parameters we need to monitor the Openshift cluster with this Sysdig instance: Sysdig Access Key and Sysdig Collector Endpoint. 
+
+<InlineNotification>
+If you missed these parameters you can run the script get_monitoring_parameters.sh from teh monkey-army folder
+  ```
+    ./monkey-army/get_observability_parameters.sh $monitoring_instance_access_key_name
+</InlineNotification>
+
+
+Deploy the Sysdig monitoring agents on the Openshift cluster
+<InlineNotification>
+The Sysdig pods needs priviledge right to access the metrics of the node. Run the following command to add the privileged 'security context constraints'
+  ```
+    oc adm policy add-scc-to-user privileged -n ibm-observe -z sysdig-agent 
+```
+</InlineNotification>
+  ```
+       curl -sL https://raw.githubusercontent.com/draios/sysdig-cloud-scripts/master/agent_deploy/IBMCloud-Kubernetes-Service/install-agent-k8s.sh | bash -s -- -a $Sysdig_Access_Key -c $Sysdig_Collector_Endpoint -t TAG_DATA -ac 'sysdig_capture_enabled: false'
+```
+
+Wait until all the pods are deployed on the 'ibm-observe' namespace:
+
+  ```
+    oc get pods -n ibm-observe --watch
+```
+
+Access to the Monitoring Dashboard through the IBM Cloud UI or the url you can obtain with this command:
+
+  ```
+    ibmcloud resource service-instance $monitoring_instance_name --output JSON | jq -r .[0].dashboard_url
+```
+[More information about monitoring in IBM Cloud Openshift clusters](https://cloud.ibm.com/docs/monitoring?topic=monitoring-kubernetes_cluster)
+
+## Logging:
+
+Create the Logging instance to use:
+
+<InlineNotification>
+It is possible to use an already provisioned instance 
+</InlineNotification>
+<InlineNotification>
+The service plan availables are: 'lite', '7-day', '14-day', '30-day'.
+You can find the regions available to deploy Logging [here](https://cloud.ibm.com/docs/log-analysis?topic=log-analysis-regions)
+</InlineNotification>
+  ```
+    ibmcloud resource service-instance-create $logging_instance_name logdna $logging_plan $location
+```
+Once the instance is created, we neeed to create the key to access to the instance from Openshift with "Manager" access:
+  ```
+    ibmcloud resource service-key-create $logging_instance_access_key_name Manager --instance-name $logging_instance_name
+```
+The output of the key creation should give us one parameter we need to monitor the Openshift cluster with this LogDNA instance: ingestion_key.
+
+<InlineNotification>
+If you missed this parameter you can run the script get_logging_parameter.sh from the monkey-army folder
+  ```
+    ./monkey-army/get_observability_parameters.sh $logging_instance_access_key_name
+</InlineNotification>
+
+Create the LogDNA secret with the logging ingestion key to send teh logs to the LogDNA instance:
+  ```
+    oc create secret generic logdna-agent-key --from-literal=logdna-agent-key=$log_dna_ingestion_key -n ibm-observe
+```
+Deploy the LogDNA agents on the Openshift cluster
+<InlineNotification>
+The LogDNA pods needs hostmount-anyuid rights. Run the following command to add the hostmount-anyuid 'security context constraints'
+  ```
+    oc adm policy add-scc-to-user hostmount-anyuid -n ibm-observe -z default
+```
+</InlineNotification>
+  ```
+    oc create -f https://assets.us-south.logging.cloud.ibm.com/clients/logdna-agent-ds.yaml -n ibm-observe
+```
+
+Wait until all the pods are deployed on the 'ibm-observe' namespace:
+
+  ```
+    oc get pods -n ibm-observe --watch
+```
+
+Access to the Monitoring Dashboard through the IBM Cloud UI or the url you can obtain with this command:
+
+  ```
+    ibmcloud resource service-instance $monitoring_instance_name --output JSON | jq -r .[0].dashboard_url
+```

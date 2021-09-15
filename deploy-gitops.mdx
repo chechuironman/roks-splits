@@ -1,3 +1,9 @@
+---
+title: Red Hat Openshift Kubernetes Service on IBM Cloud
+description: Production Architecture on Red Hat Openshift Kubernetes Service
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps','Deploy Observability','Establish Security Perimeter']
+---
+
 # Deploy GitOps
 ---
 
@@ -54,22 +60,25 @@ spec:
 
 Apply the taints to the nodes to avoid workloads not related to that node role to be placed in:
 
+<InlineNotification>
+Before applying taints you should confirm all pods are running.
+</InlineNotification>
 For the cloud-paks nodes.
 
   ```
-    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool cloud-paks --taint node-role.kubernetes.io/cloud-paks=true:NoSchedule -f
+    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool cloud-paks --taint node-role.kubernetes.io/cloud-paks=true:NoExecute -f
 ```
 
 For the Foundational Services nodes.
 
   ```
-    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool foundational-services --taint node-role.kubernetes.io/foundational-services=true:NoSchedule -f
+    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool foundational-services --taint node-role.kubernetes.io/foundational-services=true:NoExecute -f
 ```
 
 If you are deploying topologies ROKS-3 or ROKS-4, you need to apply the Storage nodes taints:
 
   ```
-    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool storage --taint node-role.kubernetes.io/storage=true:NoSchedule -f
+    ibmcloud oc worker-pool taint set --cluster $roks_name --worker-pool storage --taint node-role.kubernetes.io/storage=true:NoExecute -f
 ```
 
 Depending on the clusteer topology to deploy choose between the next bootstrap ArgoCD apps:
@@ -78,11 +87,6 @@ Depending on the clusteer topology to deploy choose between the next bootstrap A
 - 0-bootstrap/argocd/roks-split-3/bootstrap.yaml
 - 0-bootstrap/argocd/roks-split-4/bootstrap.yaml
 
-To deploy the bootstrap app that will roll out the cluster components installation run:
-
-  ```
-    oc apply -f 0-bootstrap/argocd/roks-split-$X/bootstrap.yaml -n openshift-gitops
-```
 
 To grab the ArgoCD credentials and route to access to the dashboard run:
 
@@ -107,16 +111,16 @@ If using Github Enterprise it is needed to authenticate against the repo. Follow
 Add the following repos to the argoCD instance, $github_password is a token created in Github Enterprise with permissions to read the repo:
 
   ```
-    argocd  repo add https://github.com/chechuironman/roks-splits --type git --name roks-splits --username ${github_username} --password  ${github_password} --insecure
-    argocd  repo add https://github.com/chechuironman/roks-infra --type git --name roks-infra --username ${github_username} --password  ${github_password} --insecure
-    argocd  repo add https://github.com/chechuironman/roks-services --type git --name roks-services --username ${github_username} --password  ${github_password} --insecure
-
+    argocd  repo add https://github.com/chechuironman/roks-splits --type git --name roks-splits 
+    argocd  repo add https://github.com/chechuironman/roks-infra --type git --name roks-infra
+    argocd  repo add https://github.com/chechuironman/roks-services --type git --name roks-services 
 
 ```
 
-The 3-layer structure works by moving the items that need to be set up on the cluster to the active folder. Modify the 3-infra.yaml file in the bootstrap/inactive folder, to point the repoURL and the sourceRepos keys to your repo. Move it to the active folder. Modify again the repoURL and the sourceRepos keys on the refarch-infraconfig.yaml in the 3-infra/argocd/inactive and move it to the active folder. Push it to git.
+To deploy the bootstrap app that will roll out the cluster components installation run:
 
-oc apply -f 0-bootstrap/argocd/bootstrap.yaml -n openshift-gitops
-
+  ```
+    oc apply -f 0-bootstrap/argocd/roks-split-$X/bootstrap.yaml -n openshift-gitops
+```
 
 

@@ -1,7 +1,7 @@
 ---
 title: Red Hat Openshift Kubernetes Service on IBM Cloud
 description: Production Architecture on Red Hat Openshift Kubernetes Service
-tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps']
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps','Deploy Observability','Establish Security Perimeter']
 ---
 
 # Deploy VPC to host ROKS 
@@ -158,11 +158,11 @@ Run `ibmcloud is subnets` to get the subnets ID, and `ibmcloud is public-gateway
 
 If you are deploying the architecture topology ROKS-3 or ROKS-4, where the cluster will host OpenShift Storage Container repeat the process for the storage node type:
   ```  
-    ibmcloud is subnet-update $subnet-workers-1_id --public-gateway-id $gw-subnet-zone-1_id
+    ibmcloud is subnet-update $subnet-storage-1_id --public-gateway-id $gw-subnet-zone-1_id
 
-    ibmcloud is subnet-update $subnet-workers-2_id --public-gateway-id $gw-subnet-zone-2_id
+    ibmcloud is subnet-update $subnet-storage-2_id --public-gateway-id $gw-subnet-zone-2_id
 
-    ibmcloud is subnet-update $subnet-workers-3_id --public-gateway-id $gw-subnet-zone-3_id
+    ibmcloud is subnet-update $subnet-storage-3_id --public-gateway-id $gw-subnet-zone-3_id
 ```  
 
 If you are deploying the architecture topology ROKS-2 or ROKS-4, where the cluster will host applications repeat the process for the worker node type:  

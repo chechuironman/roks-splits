@@ -1,7 +1,7 @@
 ---
 title: Red Hat Openshift Kubernetes Service on IBM Cloud
 description: Production Architecture on Red Hat Openshift Kubernetes Service
-tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps']
+tabs: ['Target Architecture','Deploy VPC', 'Deploy VPN Gateway', 'Deploy ROKS', 'Deploy GitOps','Deploy Observability','Establish Security Perimeter']
 ---
 
 # Deploy ROKS
@@ -82,7 +82,7 @@ If you are bringing your own license use the flag `cloud_pak` for the entitlemen
 ```
 It is needed to apply the Openshift Container Storage addon from IBM Cloud to the cluster, that will deploy the specific CRD for OOpenshift Data Foundation from IBM Cloud:
   ```
-    ibmcloud oc cluster addon enable openshift-container-storage --cluster $roks_id
+    ibmcloud oc cluster addon enable openshift-container-storage --cluster $roks_id --version 4.7.0
 ```
 
 Extending the worker pool across the three zones:
@@ -92,8 +92,6 @@ Extending the worker pool across the three zones:
     ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-storage-2_id  --cluster $roks_id --zone $zone_2 --worker-pool storage
     ibmcloud oc zone add vpc-gen2 --subnet-id $subnet-storage-3_id  --cluster $roks_id --zone $zone_3 --worker-pool storage
 ```
-
-
 
 
 The default roles assigned by IBM Cloud need to be changed, to remove them:
@@ -112,7 +110,9 @@ Remove the master and worker role labels from nodes, to apply the correct labels
     oc get nodes | awk '{print $1}'|awk '{if(NR>1)print}' | xargs -I {} bash -c 'oc label node {} node-role.kubernetes.io/worker-'
 
 ```
-The worker nodes need to be labeled and tainted:    
+
+If you are deploying topologies ROKS-2 or ROKS-4, you need to create the Storage worker pool, the worker nodes need to be labeled and tainted:    
+
 The `default` worker pool can be used to host applications that don`t fit with the infra workloads, storage workloads, or Cloud Pak workloads. To label the worker pool run:
   ```
     ibmcloud oc worker-pool label set --cluster $roks_name --worker-pool default --label node-role.kubernetes.io/worker=''
