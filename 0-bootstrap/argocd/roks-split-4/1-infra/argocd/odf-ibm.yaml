@@ -17,8 +17,8 @@ spec:
     targetRevision: master
     helm:
       values: |
-        ocs-operator:
-          ocs:
+        odf-operator:
+          odf:
             storageClass: ocs-initial
             sizeOSD: 512Gi
             worker_ip_1: 192.168.6.18
