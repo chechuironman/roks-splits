@@ -28,7 +28,7 @@ spec:
             cpaks_enable: true
             storage_enable: true
             foundational_services_enable: true
-            workers: true
+            worker_enable: true
   syncPolicy:
     automated:
       prune: true
