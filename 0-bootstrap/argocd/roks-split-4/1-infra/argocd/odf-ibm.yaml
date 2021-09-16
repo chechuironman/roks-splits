@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: storage
   annotations:
-    argocd.argoproj.io/sync-wave: "110"
+    argocd.argoproj.io/sync-wave: "100"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -21,9 +21,9 @@ spec:
           odf:
             storageClass: ocs-initial
             sizeOSD: 512Gi
-            worker_ip_1: 192.168.6.18
-            worker_ip_2: 192.168.4.12
-            worker_ip_3: 192.168.5.16
+            worker_ip_1: 192.168.6.19
+            worker_ip_2: 192.168.4.13
+            worker_ip_3: 192.168.5.17
             billingType: advanced
             cpaks_enable: enable
             storage_enable: enable
