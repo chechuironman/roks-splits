@@ -21,9 +21,9 @@ spec:
           odf:
             storageClass: ibmc-vpc-block-metro-10iops-tier
             sizeOSD: 512Gi
-            worker_ip_1: 192.168.6.21
-            worker_ip_2: 192.168.4.18
-            worker_ip_3: 192.168.5.22
+            worker_ip_1: 192.168.6.22
+            worker_ip_2: 192.168.4.19
+            worker_ip_3: 192.168.5.3
             billingType: advanced
             cpaks_enable: enable
             storage_enable: enable
