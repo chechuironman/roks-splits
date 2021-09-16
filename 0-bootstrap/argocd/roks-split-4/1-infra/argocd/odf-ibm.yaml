@@ -23,7 +23,7 @@ spec:
             sizeOSD: 512Gi
             worker_ip_1: 192.168.6.22
             worker_ip_2: 192.168.4.19
-            worker_ip_3: 192.168.5.3
+            worker_ip_3: 192.168.5.23
             billingType: advanced
             cpaks_enable: enable
             storage_enable: enable
