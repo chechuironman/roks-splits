@@ -44,7 +44,7 @@ resources:
 # # Sealed Secrets
 # - argocd/operators/sealed-secrets.yaml
 # - argocd/instances/sealed-secrets-instance.yaml
-- argocd/operators/external-secret-operator.yaml
+# - argocd/operators/external-secret-operator.yaml
 # CICD
 #- argocd/operators/grafana.yaml
 #- argocd/instances/grafana-instance.yaml
