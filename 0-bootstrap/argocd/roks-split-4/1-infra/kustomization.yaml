@@ -19,7 +19,7 @@ resources:
 - argocd/namespace-openshift-pipelines.yaml
 - argocd/namespace-ibm-foundations.yaml
 - argocd/namespace-kube-system.yaml
-- argocd/namespace-openshift-calico-system.yaml
+- argocd/namespace-calico-system.yaml
 - argocd/namespace-openshift-cluster-storage-operator.yaml
 - argocd/namespace-image-registry.yaml
 - argocd/namespace-external-secrets.yaml
