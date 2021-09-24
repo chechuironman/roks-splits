@@ -54,6 +54,10 @@ spec:
     server: https://kubernetes.default.svc
   - namespace: kube-system
     server: https://kubernetes.default.svc
+  - namespace: calico-system
+    server: https://kubernetes.default.svc
+    - namespace: openshift-cluster-storage-operator
+    server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: ""
     kind: Namespace
