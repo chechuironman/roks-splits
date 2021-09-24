@@ -56,7 +56,7 @@ spec:
     server: https://kubernetes.default.svc
   - namespace: calico-system
     server: https://kubernetes.default.svc
-    - namespace: openshift-cluster-storage-operator
+  - namespace: openshift-cluster-storage-operator
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: ""
